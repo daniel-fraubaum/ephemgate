@@ -1,0 +1,27 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "projectName": {
+      "value": "ephemgate-prod"
+    },
+    "location": {
+      "value": "germanywestcentral"
+    },
+    "entraClientIdSS": {
+      "value": "<self-service-app-client-id>"
+    },
+    "entraClientIdHD": {
+      "value": "<helpdesk-app-client-id>"
+    },
+    "entraTenantId": {
+      "value": "<your-tenant-id>"
+    },
+    "customDomainSS": {
+      "value": ""
+    },
+    "customDomainHD": {
+      "value": ""
+    }
+  }
+}

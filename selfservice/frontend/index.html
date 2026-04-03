@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EphemGate – Self-Service TAP Portal</title>
+  <link rel="icon" href="favicon.png" type="image/png" />
+  <link rel="stylesheet" href="css/theme.css" />
+  <style>
+    /* ── Reset ─────────────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      height: 100%;
+      font-family: var(--font);
+      font-size: var(--font-size);
+      color: var(--color-text);
+      background: var(--color-bg);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── View system ───────────────────────────────────────────────────── */
+    .view        { display: none; min-height: 100vh; }
+    .view.active { display: flex; flex-direction: column; }
+    .center-wrap {
+      flex: 1; display: flex; align-items: center; justify-content: center;
+      padding: 24px 16px;
+    }
+
+    /* ── Card ───────────────────────────────────────────────────────────── */
+    .card {
+      background: var(--color-surface);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+      padding: 40px 36px;
+    }
+    .card-center {
+      max-width: 440px; width: 100%; text-align: center;
+      display: flex; flex-direction: column; align-items: center; gap: 16px;
+    }
+
+    /* ── Typography ────────────────────────────────────────────────────── */
+    .title    { font-size: var(--font-size-xl); font-weight: 600; line-height: 1.2; }
+    .subtitle { font-size: var(--font-size-sm); color: var(--color-text-muted); max-width: 320px; line-height: 1.5; }
+
+    /* ── Login view ────────────────────────────────────────────────────── */
+    #view-login {
+      background:
+        radial-gradient(ellipse at 20% 25%, rgba(0,120,212,.30) 0%, transparent 52%),
+        radial-gradient(ellipse at 78% 72%, rgba(88,24,119,.20) 0%, transparent 52%),
+        linear-gradient(155deg, #071428 0%, #0d2347 45%, #0b1a38 100%);
+      position: relative; overflow: hidden;
+    }
+    #view-login::before, #view-login::after {
+      content: ''; position: absolute; border-radius: 50%; pointer-events: none;
+    }
+    #view-login::before {
+      width: 560px; height: 560px; top: -140px; left: -180px;
+      background: radial-gradient(circle, rgba(0,120,212,.18) 0%, transparent 70%);
+      animation: lf-float-a 9s ease-in-out infinite;
+    }
+    #view-login::after {
+      width: 420px; height: 420px; bottom: -100px; right: -120px;
+      background: radial-gradient(circle, rgba(0,160,255,.12) 0%, transparent 70%);
+      animation: lf-float-b 12s ease-in-out infinite;
+    }
+    @keyframes lf-float-a { 0%,100%{transform:translate(0,0)} 50%{transform:translate(28px,18px)} }
+    @keyframes lf-float-b { 0%,100%{transform:translate(0,0)} 50%{transform:translate(-22px,-28px)} }
+
+    #view-login .card-center {
+      background: rgba(255,255,255,.98);
+      border-radius: 18px; border-top: 3px solid #0078d4;
+      box-shadow: 0 32px 80px rgba(0,0,0,.45), 0 0 0 1px rgba(255,255,255,.08);
+      gap: 18px; padding: 48px 44px; position: relative; z-index: 1;
+    }
+    [data-theme="dark"] #view-login .card-center {
+      background: rgba(34,34,58,.96);
+      border-top-color: #4da6ff;
+      box-shadow: 0 32px 80px rgba(0,0,0,.65), 0 0 0 1px rgba(255,255,255,.06);
+    }
+
+    .login-icon {
+      width: 68px; height: 68px;
+      background: linear-gradient(145deg, #0078d4 0%, #106ebe 100%);
+      border-radius: 18px;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 10px 30px rgba(0,120,212,.45);
+      margin-bottom: 4px;
+    }
+    .login-icon svg { width: 34px; height: 34px; fill: #fff; }
+
+    #view-login .title { font-size: 26px; font-weight: 700; color: #0a1628; letter-spacing: -.3px; }
+    #view-login .subtitle { color: #5a6a7a; max-width: 300px; line-height: 1.6; }
+    [data-theme="dark"] #view-login .title { color: #e0e0e0; }
+    [data-theme="dark"] #view-login .subtitle { color: #9a9ab0; }
+
+    .login-features {
+      width: 100%; text-align: left;
+      background: #f4f8fc; border: 1px solid #ddeaf8;
+      border-radius: 10px; padding: 14px 16px;
+      display: flex; flex-direction: column; gap: 9px;
+    }
+    [data-theme="dark"] .login-features {
+      background: #1a2a3e; border-color: #2a3a4e;
+    }
+    .login-feature {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 13px; color: #384858;
+    }
+    [data-theme="dark"] .login-feature { color: #b0b8c8; }
+    .login-feature svg { width: 15px; height: 15px; fill: #0078d4; flex-shrink: 0; }
+
+    .login-divider {
+      width: 100%; height: 1px;
+      background: linear-gradient(to right, transparent, #d8e8f4, transparent);
+    }
+    [data-theme="dark"] .login-divider {
+      background: linear-gradient(to right, transparent, #333352, transparent);
+    }
+
+    /* ── Buttons ────────────────────────────────────────────────────────── */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: 8px; border: 1px solid transparent; border-radius: var(--radius);
+      font-family: inherit; font-size: var(--font-size); font-weight: 500;
+      cursor: pointer; padding: 8px 16px;
+      transition: background .15s, color .15s, border-color .15s;
+      white-space: nowrap; text-decoration: none; user-select: none;
+    }
+    .btn:disabled { opacity: .45; cursor: not-allowed; pointer-events: none; }
+    .btn-primary { background: var(--color-primary); color: var(--color-primary-text); }
+    .btn-primary:hover { background: var(--color-primary-hover); }
+    .btn-primary:active { background: var(--color-primary-active); }
+    .btn-ghost { background: transparent; border-color: var(--color-border); color: var(--color-text-muted); }
+    .btn-ghost:hover { background: var(--color-bg); color: var(--color-text); }
+    .btn-sm { font-size: var(--font-size-sm); padding: 5px 10px; }
+    .btn-lg { font-size: var(--font-size-lg); padding: 12px 28px; }
+    .btn-icon { background: transparent; border-color: transparent; padding: 6px; border-radius: var(--radius); color: var(--color-text-muted); }
+    .btn-icon:hover { background: var(--color-bg); color: var(--color-text); }
+
+    .btn-microsoft {
+      background: #fff; border: 1px solid #8c8c8c; color: #5e5e5e;
+      font-size: var(--font-size-sm); gap: 10px; padding: 10px 20px;
+    }
+    .btn-microsoft:hover { background: #f5f5f5; }
+    [data-theme="dark"] .btn-microsoft {
+      background: #2a2a44; border-color: #444466; color: #d0d0e0;
+    }
+    [data-theme="dark"] .btn-microsoft:hover { background: #333358; }
+
+    #view-login .btn-microsoft {
+      width: 100%; justify-content: center;
+      padding: 12px 24px; font-size: 15px; font-weight: 600;
+      border: 1.5px solid #d0d8e0; border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.08);
+      transition: background .18s, border-color .18s, box-shadow .18s, transform .15s;
+      gap: 12px;
+    }
+    #view-login .btn-microsoft:hover {
+      background: #eef4fc; border-color: #0078d4;
+      box-shadow: 0 6px 20px rgba(0,120,212,.22); transform: translateY(-1px);
+    }
+    #view-login .btn-microsoft:active { transform: translateY(0); box-shadow: none; }
+    [data-theme="dark"] #view-login .btn-microsoft {
+      background: #2a2a44; border-color: #444466; color: #d0d0e0;
+    }
+    [data-theme="dark"] #view-login .btn-microsoft:hover {
+      background: #333358; border-color: #4da6ff; box-shadow: 0 6px 20px rgba(77,166,255,.22);
+    }
+
+    #view-login .hint { font-size: 12px; color: #94a3b4; }
+
+    .login-blog-link {
+      display: inline-flex; align-items: center; gap: 6px;
+      margin-top: 16px; font-size: 11px; color: #94a3b4;
+      text-decoration: none; transition: color .15s;
+    }
+    .login-blog-link:hover { color: #0078d4; }
+    .login-blog-link img { border-radius: 3px; opacity: .8; }
+    .login-blog-powered { opacity: .7; }
+
+    /* ── Top bar ────────────────────────────────────────────────────────── */
+    .topbar {
+      position: sticky; top: 0; z-index: 50;
+      display: flex; align-items: center; gap: 12px;
+      height: var(--topbar-h); padding: 0 24px;
+      background: var(--color-surface); border-bottom: 1px solid var(--color-border);
+      box-shadow: 0 1px 4px rgba(0,0,0,.06);
+    }
+    .topbar-title { font-weight: 600; flex: 1; font-size: var(--font-size-lg); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .topbar-logo { height: 28px; width: auto; object-fit: contain; flex-shrink: 0; }
+    .topbar-user { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+    .topbar-upn { font-size: var(--font-size-sm); color: var(--color-text-muted); max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    /* ── Theme toggle ──────────────────────────────────────────────────── */
+    .theme-toggle {
+      background: transparent; border: 1px solid var(--color-border);
+      border-radius: var(--radius); padding: 6px 8px;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      color: var(--color-text-muted); transition: background .15s, color .15s;
+    }
+    .theme-toggle:hover { background: var(--color-bg); color: var(--color-text); }
+    .theme-toggle svg { width: 18px; height: 18px; fill: currentColor; }
+
+    /* ── Main content ──────────────────────────────────────────────────── */
+    .main {
+      flex: 1; max-width: 520px; width: 100%; margin: 0 auto;
+      padding: 32px 24px;
+    }
+
+    .section-title { font-size: var(--font-size-lg); font-weight: 600; margin-bottom: 4px; }
+    .section-sub { font-size: var(--font-size-sm); color: var(--color-text-muted); margin-bottom: 20px; }
+
+    /* ── TAP card ───────────────────────────────────────────────────────── */
+    .tap-card {
+      background: var(--color-surface); border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg); padding: 28px 24px;
+      box-shadow: var(--shadow); text-align: center;
+    }
+    .tap-card h2 { font-size: var(--font-size-lg); font-weight: 600; margin-bottom: 4px; }
+    .tap-card .tap-sub { font-size: var(--font-size-sm); color: var(--color-text-muted); margin-bottom: 20px; }
+
+    .auth-methods { text-align: left; margin: 16px 0; }
+    .auth-methods h3 { font-size: var(--font-size-sm); font-weight: 600; margin-bottom: 8px; }
+    .auth-methods ul { list-style: none; }
+    .auth-methods li {
+      padding: 8px 12px;
+      background: var(--color-bg);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius); margin-bottom: 4px;
+      font-size: var(--font-size-sm);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .auth-methods li .method-icon { font-size: 1.1rem; flex-shrink: 0; width: 22px; text-align: center; }
+    .auth-methods li .method-name { flex: 1; }
+    .auth-methods li .method-count {
+      background: var(--color-primary-light); color: var(--color-primary);
+      font-size: var(--font-size-xs); font-weight: 600;
+      padding: 1px 7px; border-radius: 10px;
+    }
+
+    .tap-display {
+      background: var(--color-bg);
+      border: 2px solid var(--color-border);
+      border-radius: var(--radius); padding: 20px;
+      margin: 20px 0; position: relative;
+    }
+    .tap-value {
+      font-family: var(--font-mono);
+      font-size: 1.6rem; letter-spacing: 2px;
+      padding: 8px; user-select: all; word-break: break-all;
+    }
+    .tap-actions {
+      display: flex; gap: 8px; justify-content: center;
+      margin-top: 12px;
+    }
+    .tap-actions button {
+      padding: 6px 14px;
+      border: 1px solid var(--color-border);
+      background: var(--color-surface);
+      border-radius: var(--radius);
+      cursor: pointer; font-size: var(--font-size-sm);
+      transition: background .15s;
+      color: var(--color-text);
+    }
+    .tap-actions button:hover { background: var(--color-bg); }
+    .tap-actions button.copied { background: var(--color-success); color: #fff; border-color: var(--color-success); }
+
+    .countdown-wrap { margin-top: 16px; }
+    .countdown-label {
+      display: flex; justify-content: space-between;
+      font-size: var(--font-size-xs); margin-bottom: 6px;
+    }
+    .countdown-label span { font-weight: 600; }
+    .countdown-bar {
+      height: 6px; background: var(--color-border);
+      border-radius: 99px; overflow: hidden;
+    }
+    .countdown-fill {
+      height: 100%; border-radius: 99px;
+      background: var(--color-primary);
+      transition: width 1s linear, background .5s;
+    }
+    .countdown-fill.urgent { background: var(--color-danger); }
+
+    .status-message {
+      padding: 12px 16px; border-radius: var(--radius);
+      margin: 16px 0; font-size: var(--font-size-sm);
+    }
+    .status-error { background: var(--color-danger-bg); color: var(--color-danger); border: 1px solid var(--color-danger); }
+    .status-success { background: var(--color-success-bg); color: var(--color-success); border: 1px solid var(--color-success); }
+
+    .spinner {
+      width: 20px; height: 20px;
+      border: 3px solid var(--color-border);
+      border-top-color: var(--color-primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      display: inline-block;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Footer ────────────────────────────────────────────────────────── */
+    .app-footer {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 40;
+      display: flex; align-items: center; justify-content: center;
+      height: 36px; padding: 0 16px;
+      background: var(--color-surface); border-top: 1px solid var(--color-border);
+    }
+    .app-footer-link {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 11px; color: var(--color-text-muted);
+      text-decoration: none; transition: color .15s;
+    }
+    .app-footer-link:hover { color: var(--color-primary); }
+    .app-footer-link img { border-radius: 3px; opacity: .8; }
+    .app-footer-powered { opacity: .7; }
+
+    .hidden { display: none !important; }
+
+    /* ── Responsive ────────────────────────────────────────────────────── */
+    @media (max-width: 600px) {
+      .card { padding: 28px 20px; }
+      .main { padding: 20px 12px; }
+      .topbar { padding: 0 16px; }
+      .topbar-upn { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ══ View: Login ══════════════════════════════════════════════════════ -->
+  <div id="view-login" class="view active">
+    <div class="center-wrap">
+      <div class="card card-center">
+
+        <!-- Theme toggle on login screen -->
+        <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark/light mode"
+                style="position:absolute;top:16px;right:16px">
+          <svg id="themeIconLogin" viewBox="0 0 24 24">
+            <path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36a5.389 5.389 0 0 1-4.4 2.26 5.403 5.403 0 0 1-3.14-9.8c-.44-.06-.9-.1-1.36-.1z"/>
+          </svg>
+        </button>
+
+        <div class="login-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5L12 1z" opacity=".9"/>
+            <path d="M12 8c-1.1 0-2 .9-2 2v.5H9.5v4h5v-4H14V10c0-1.1-.9-2-2-2zm.75 5.25h-1.5v-1.5h1.5v1.5zM12 9.25c.41 0 .75.34.75.75v.5h-1.5V10c0-.41.34-.75.75-.75z" fill="rgba(255,255,255,.95)"/>
+          </svg>
+        </div>
+
+        <h1 class="title">EphemGate Self-Service</h1>
+        <p class="subtitle">
+          Create a Temporary Access Pass for your own account – no helpdesk ticket needed.
+        </p>
+
+        <div class="login-features" aria-label="Key features">
+          <div class="login-feature">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
+            Sign in with your Company Account
+          </div>
+          <div class="login-feature">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
+            One-time pass, auto-expires
+          </div>
+          <div class="login-feature">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
+            Fully audited for compliance
+          </div>
+        </div>
+
+        <div class="login-divider" aria-hidden="true"></div>
+
+        <button id="btn-login" class="btn btn-microsoft" type="button">
+          <svg width="20" height="20" viewBox="0 0 21 21" aria-hidden="true">
+            <rect x="1"  y="1"  width="9" height="9" fill="#F25022"/>
+            <rect x="11" y="1"  width="9" height="9" fill="#7FBA00"/>
+            <rect x="1"  y="11" width="9" height="9" fill="#00A4EF"/>
+            <rect x="11" y="11" width="9" height="9" fill="#FFB900"/>
+          </svg>
+          Sign in with Microsoft
+        </button>
+
+        <p class="hint">Your account must be a member of this organisation.</p>
+
+        <a href="https://headsinthecloud.blog" target="_blank" rel="noopener noreferrer" class="login-blog-link">
+          <span class="login-blog-powered">Powered by</span>
+          <img src="https://headsinthecloud.blog/wp-content/uploads/2026/02/cropped-headsinthecloud_favicon-32x32.png"
+               alt="" width="16" height="16" aria-hidden="true">
+          headsinthecloud.blog
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ Top bar ══════════════════════════════════════════════════════════ -->
+  <header id="app-topbar" class="topbar hidden">
+    <img src="logo.png" alt="Logo" class="topbar-logo" />
+    <span class="topbar-title">EphemGate – Self-Service</span>
+    <div class="topbar-user">
+      <span id="topbar-upn" class="topbar-upn"></span>
+      <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark/light mode">
+        <svg id="themeIconTopbar" viewBox="0 0 24 24">
+          <path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36a5.389 5.389 0 0 1-4.4 2.26 5.403 5.403 0 0 1-3.14-9.8c-.44-.06-.9-.1-1.36-.1z"/>
+        </svg>
+      </button>
+      <button id="btn-logout" class="btn btn-ghost btn-sm" type="button">Sign out</button>
+    </div>
+  </header>
+
+  <!-- ══ View: Main (authenticated) ═══════════════════════════════════════ -->
+  <div id="view-main" class="view">
+    <div class="main">
+      <div class="tap-card">
+        <h2>Your Temporary Access Pass</h2>
+        <p class="tap-sub">Create a one-time TAP for your account. The pass will be displayed briefly.</p>
+
+        <div class="auth-methods" id="authMethodsSection">
+          <h3>Your Authentication Methods</h3>
+          <ul id="authMethodsList"></ul>
+        </div>
+
+        <div id="statusMessage" class="hidden"></div>
+
+        <div id="tapResult" class="hidden">
+          <div class="tap-display">
+            <div class="tap-value" id="tapValue">••••••••</div>
+            <div class="tap-actions">
+              <button onclick="toggleTapVisibility()" id="toggleBtn">
+                <svg style="width:16px;height:16px;fill:currentColor;vertical-align:middle;margin-right:4px" viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zm0 12.5a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></svg>
+                Show
+              </button>
+              <button onclick="copyTap()" id="copyBtn">
+                <svg style="width:16px;height:16px;fill:currentColor;vertical-align:middle;margin-right:4px" viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+                Copy
+              </button>
+            </div>
+          </div>
+          <div class="countdown-wrap">
+            <div class="countdown-label">
+              <span>Password visibility</span>
+              <span id="countdownText">5:00</span>
+            </div>
+            <div class="countdown-bar">
+              <div id="countdownFill" class="countdown-fill" style="width:100%"></div>
+            </div>
+          </div>
+        </div>
+
+        <button class="btn btn-primary btn-lg" id="generateBtn" onclick="generateTap()" style="margin-top:20px;width:100%">
+          Generate TAP
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Persistent footer -->
+  <footer id="app-footer" class="app-footer hidden">
+    <a href="https://headsinthecloud.blog" target="_blank" rel="noopener noreferrer" class="app-footer-link">
+      <span class="app-footer-powered">Powered by</span>
+      <img src="https://headsinthecloud.blog/wp-content/uploads/2026/02/cropped-headsinthecloud_favicon-32x32.png"
+           alt="" width="16" height="16" aria-hidden="true">
+      headsinthecloud.blog
+    </a>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@2.38.3/lib/msal-browser.min.js"></script>
+  <script src="authConfig.js"></script>
+  <script>
+    'use strict';
+
+    // ── Theme management ──────────────────────────────────────────────
+    function getPreferredTheme() {
+      const stored = localStorage.getItem('ephemgate-theme');
+      if (stored) return stored;
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+
+    function applyTheme(theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+      localStorage.setItem('ephemgate-theme', theme);
+      const moonPath = 'M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36a5.389 5.389 0 0 1-4.4 2.26 5.403 5.403 0 0 1-3.14-9.8c-.44-.06-.9-.1-1.36-.1z';
+      const sunPath = 'M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1zM5.99 4.58a.996.996 0 0 0-1.41 0 .996.996 0 0 0 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0s.39-1.03 0-1.41L5.99 4.58zm12.37 12.37a.996.996 0 0 0-1.41 0 .996.996 0 0 0 0 1.41l1.06 1.06c.39.39 1.03.39 1.41 0a.996.996 0 0 0 0-1.41l-1.06-1.06zm1.06-10.96a.996.996 0 0 0 0-1.41.996.996 0 0 0-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06zM7.05 18.36a.996.996 0 0 0 0-1.41.996.996 0 0 0-1.41 0l-1.06 1.06c-.39.39-.39 1.03 0 1.41s1.03.39 1.41 0l1.06-1.06z';
+      const iconPath = theme === 'dark' ? sunPath : moonPath;
+      document.querySelectorAll('#themeIconLogin path, #themeIconTopbar path').forEach(p => {
+        p.setAttribute('d', iconPath);
+      });
+    }
+
+    function toggleTheme() {
+      const current = document.documentElement.getAttribute('data-theme') || 'light';
+      applyTheme(current === 'dark' ? 'light' : 'dark');
+    }
+
+    applyTheme(getPreferredTheme());
+
+    // ── MSAL ──────────────────────────────────────────────────────────
+    let msalInstance = null;
+    let currentAccount = null;
+    let currentTap = null;
+    let tapMasked = true;
+    let countdownInterval = null;
+
+    const views = {
+      login: document.getElementById('view-login'),
+      main:  document.getElementById('view-main'),
+    };
+    const appTopbar = document.getElementById('app-topbar');
+    const appFooter = document.getElementById('app-footer');
+
+    function showView(name) {
+      Object.values(views).forEach(v => v.classList.remove('active'));
+      views[name].classList.add('active');
+      const authenticated = name !== 'login';
+      appTopbar.classList.toggle('hidden', !authenticated);
+      appFooter.classList.toggle('hidden', !authenticated);
+    }
+
+    async function initMsal() {
+      msalInstance = new msal.PublicClientApplication(msalConfig);
+      await msalInstance.initialize();
+
+      const response = await msalInstance.handleRedirectPromise();
+      if (response) {
+        currentAccount = response.account;
+      } else {
+        const accounts = msalInstance.getAllAccounts();
+        if (accounts.length > 0) currentAccount = accounts[0];
+      }
+
+      if (currentAccount) {
+        showAuthenticatedView();
+        loadAuthMethods();
+      }
+    }
+
+    function signIn() {
+      msalInstance.loginRedirect(loginRequest);
+    }
+
+    function signOut() {
+      msalInstance.logoutRedirect({ account: currentAccount });
+    }
+
+    function showAuthenticatedView() {
+      showView('main');
+      document.getElementById('topbar-upn').textContent = currentAccount.username;
+    }
+
+    async function getToken() {
+      try {
+        const resp = await msalInstance.acquireTokenSilent({
+          ...loginRequest,
+          account: currentAccount,
+        });
+        return resp.accessToken;
+      } catch {
+        await msalInstance.acquireTokenRedirect(loginRequest);
+        return null;
+      }
+    }
+
+    async function apiCall(method, url) {
+      const token = await getToken();
+      if (!token) return null;
+      const resp = await fetch(apiBaseUrl + url, {
+        method,
+        headers: {
+          'Authorization': 'Bearer ' + token,
+          'Content-Type': 'application/json',
+        },
+      });
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data.error || 'Request failed');
+      return data;
+    }
+
+    const AUTH_METHOD_META = {
+      passwordAuthenticationMethod:           { label: 'Password',                  icon: '🔑' },
+      phoneAuthenticationMethod:              { label: 'Phone',                     icon: '📱' },
+      emailAuthenticationMethod:              { label: 'Email',                     icon: '✉️' },
+      fido2AuthenticationMethod:              { label: 'FIDO2 Security Key',        icon: '🔐' },
+      softwareOathAuthenticationMethod:       { label: 'Authenticator (TOTP)',       icon: '🛡️' },
+      microsoftAuthenticatorAuthenticationMethod: { label: 'Microsoft Authenticator', icon: '🛡️' },
+      temporaryAccessPassAuthenticationMethod:{ label: 'Temporary Access Pass',     icon: '⏳' },
+      windowsHelloForBusinessAuthenticationMethod: { label: 'Windows Hello for Business', icon: '👋' },
+      platformCredentialAuthenticationMethod: { label: 'Platform Credential',       icon: '💻' },
+      qrCodePinAuthenticationMethod:          { label: 'QR Code + PIN',             icon: '📷' },
+    };
+
+    async function loadAuthMethods() {
+      try {
+        const data = await apiCall('GET', '/my-auth-methods');
+        const list = document.getElementById('authMethodsList');
+        list.innerHTML = '';
+        if (data.methods && data.methods.length > 0) {
+          const counts = {};
+          data.methods.forEach(m => { counts[m.type] = (counts[m.type] || 0) + 1; });
+          Object.entries(counts).forEach(([type, count]) => {
+            const meta = AUTH_METHOD_META[type] || { label: type.replace(/AuthenticationMethod$/i, ''), icon: '🔒' };
+            const li = document.createElement('li');
+            li.innerHTML =
+              `<span class="method-icon">${meta.icon}</span>` +
+              `<span class="method-name">${meta.label}</span>` +
+              (count > 1 ? `<span class="method-count">×${count}</span>` : '');
+            list.appendChild(li);
+          });
+        } else {
+          list.innerHTML = '<li>No authentication methods found</li>';
+        }
+      } catch (err) {
+        console.error('Failed to load auth methods:', err);
+      }
+    }
+
+    async function generateTap() {
+      const btn = document.getElementById('generateBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Generating...';
+      hideStatus();
+      document.getElementById('tapResult').classList.add('hidden');
+      clearCountdown();
+
+      try {
+        const data = await apiCall('PUT', '/generate-tap');
+        currentTap = data.temporaryAccessPass;
+        tapMasked = true;
+
+        document.getElementById('tapValue').textContent = '••••••••';
+        document.getElementById('toggleBtn').innerHTML = '<svg style="width:16px;height:16px;fill:currentColor;vertical-align:middle;margin-right:4px" viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zm0 12.5a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></svg> Show';
+        document.getElementById('tapResult').classList.remove('hidden');
+
+        startCountdown(data.displayTimeoutSeconds || 300);
+        showStatus('TAP created successfully! It will auto-hide after the countdown.', 'success');
+      } catch (err) {
+        showStatus(err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = 'Generate TAP';
+      }
+    }
+
+    function toggleTapVisibility() {
+      const el = document.getElementById('tapValue');
+      const btn = document.getElementById('toggleBtn');
+      if (tapMasked) {
+        el.textContent = currentTap;
+        btn.innerHTML = '<svg style="width:16px;height:16px;fill:currentColor;vertical-align:middle;margin-right:4px" viewBox="0 0 24 24"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24M1 1l22 22"/></svg> Hide';
+        tapMasked = false;
+      } else {
+        el.textContent = '••••••••';
+        btn.innerHTML = '<svg style="width:16px;height:16px;fill:currentColor;vertical-align:middle;margin-right:4px" viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zm0 12.5a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></svg> Show';
+        tapMasked = true;
+      }
+    }
+
+    async function copyTap() {
+      if (!currentTap) return;
+      try {
+        await navigator.clipboard.writeText(currentTap);
+        const btn = document.getElementById('copyBtn');
+        btn.classList.add('copied');
+        btn.innerHTML = '<svg style="width:16px;height:16px;fill:currentColor;vertical-align:middle;margin-right:4px" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg> Copied!';
+        setTimeout(() => {
+          btn.classList.remove('copied');
+          btn.innerHTML = '<svg style="width:16px;height:16px;fill:currentColor;vertical-align:middle;margin-right:4px" viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg> Copy';
+        }, 2000);
+      } catch {
+        showStatus('Failed to copy to clipboard', 'error');
+      }
+    }
+
+    function startCountdown(seconds) {
+      let remaining = seconds;
+      const fill = document.getElementById('countdownFill');
+      const text = document.getElementById('countdownText');
+      fill.style.width = '100%';
+      fill.classList.remove('urgent');
+
+      countdownInterval = setInterval(() => {
+        remaining--;
+        const pct = (remaining / seconds) * 100;
+        fill.style.width = pct + '%';
+        fill.classList.toggle('urgent', remaining <= 30);
+        const mins = Math.floor(remaining / 60);
+        const secs = remaining % 60;
+        text.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+
+        if (remaining <= 0) {
+          clearCountdown();
+          hideTap();
+        }
+      }, 1000);
+    }
+
+    function clearCountdown() {
+      if (countdownInterval) {
+        clearInterval(countdownInterval);
+        countdownInterval = null;
+      }
+    }
+
+    function hideTap() {
+      currentTap = null;
+      tapMasked = true;
+      document.getElementById('tapResult').classList.add('hidden');
+      showStatus('TAP has been hidden for security. Generate a new one if needed.', 'error');
+    }
+
+    function showStatus(msg, type) {
+      const el = document.getElementById('statusMessage');
+      el.textContent = msg;
+      el.className = 'status-message status-' + type;
+      el.classList.remove('hidden');
+    }
+
+    function hideStatus() {
+      document.getElementById('statusMessage').classList.add('hidden');
+    }
+
+    // ── Event listeners ───────────────────────────────────────────────
+    document.getElementById('btn-login').addEventListener('click', signIn);
+    document.getElementById('btn-logout').addEventListener('click', signOut);
+
+    initMsal();
+  </script>
+</body>
+</html>

@@ -1,0 +1,91 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+ *  EphemGate – Self-Service Portal  ·  Branding & Theme Configuration
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ *  HOW TO CUSTOMISE
+ *  ────────────────
+ *  1. COLOURS   → Change the CSS variables below (Light Mode + Dark Mode).
+ *  2. LOGO      → Replace  logo.png  in the portal root with your company
+ *                 logo (any size, displayed at max 28 px height in the top
+ *                 bar and 20 px in the footer).
+ *  3. FAVICON   → Replace  favicon.png  in the portal root with your icon.
+ *  4. FONTS     → Swap the --font / --font-mono families.
+ *  5. ROUNDING  → Adjust --radius and --radius-lg for sharper / rounder UI.
+ *
+ *  All variables are optional overrides. The defaults below ship out of the
+ *  box with the standard EphemGate blue theme.
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+
+/* ── Light Mode (default) ──────────────────────────────────────────────── */
+:root {
+
+  /* ·· Primary brand colour + interactive states ······················ */
+  --color-primary:        #0078d4;       /* Main accent (buttons, links)    */
+  --color-primary-hover:  #106ebe;       /* Button hover                    */
+  --color-primary-active: #005a9e;       /* Button pressed / active         */
+  --color-primary-light:  #deecf9;       /* Subtle highlight backgrounds    */
+  --color-primary-text:   #ffffff;       /* Text on primary-coloured bg     */
+
+  /* ·· Semantic colours ··············································· */
+  --color-success:        #107c10;       /* Success text / icons            */
+  --color-success-bg:     #dff6dd;       /* Success background              */
+  --color-danger:         #a4262c;       /* Error / danger text             */
+  --color-danger-bg:      #fde7e9;       /* Error background                */
+  --color-warning:        #7a6c00;       /* Warning text                    */
+  --color-warning-bg:     #fff4ce;       /* Warning background              */
+
+  /* ·· Surface & background ··········································· */
+  --color-bg:             #f5f5f5;       /* Page background                 */
+  --color-surface:        #ffffff;       /* Cards, panels, top bar          */
+  --color-border:         #e8e8e8;       /* Borders & dividers              */
+
+  /* ·· Typography ····················································· */
+  --color-text:           #202020;       /* Default body text               */
+  --color-text-muted:     #717171;       /* Secondary / helper text         */
+  --font:                 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-mono:            'Cascadia Code', 'Consolas', monospace;
+  --font-size:            16px;
+  --font-size-sm:         14px;
+  --font-size-xs:         12px;
+  --font-size-lg:         20px;
+  --font-size-xl:         28px;
+
+  /* ·· Layout & shape ················································· */
+  --radius:               8px;           /* Default border-radius           */
+  --radius-lg:            12px;          /* Cards & larger elements         */
+  --shadow:               0 2px 8px rgba(0,0,0,.10);
+  --shadow-lg:            0 8px 32px rgba(0,0,0,.16);
+  --topbar-h:             56px;          /* Height of the top navigation    */
+
+  /* ·· Overlay ························································ */
+  --color-overlay:        rgba(0, 0, 0, 0.45);
+}
+
+
+/* ── Dark Mode ─────────────────────────────────────────────────────────── *
+ *  Only the variables that DIFFER from light mode need to be listed here.
+ *  Everything else is inherited automatically.
+ * ──────────────────────────────────────────────────────────────────────── */
+[data-theme="dark"] {
+
+  /* ·· Surface & background ··········································· */
+  --color-bg:             #1a1a2e;
+  --color-surface:        #22223a;
+  --color-border:         #333352;
+
+  /* ·· Typography ····················································· */
+  --color-text:           #e0e0e0;
+  --color-text-muted:     #9a9ab0;
+
+  /* ·· Semantic backgrounds (toned down for dark) ····················· */
+  --color-primary-light:  #1a3a5c;
+  --color-success-bg:     #1a3a1a;
+  --color-danger-bg:      #3a1a1a;
+  --color-warning-bg:     #3a3a1a;
+
+  /* ·· Overlay & shadows ·············································· */
+  --color-overlay:        rgba(0, 0, 0, 0.65);
+  --shadow:               0 2px 8px rgba(0,0,0,.30);
+  --shadow-lg:            0 8px 32px rgba(0,0,0,.40);
+}

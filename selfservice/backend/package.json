@@ -1,0 +1,25 @@
+{
+  "name": "ephemgate-selfservice-backend",
+  "version": "1.0.0",
+  "description": "EphemGate Self-Service Portal Backend – Azure Functions",
+  "main": "src/index.js",
+  "type": "module",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "scripts": {
+    "start": "func start",
+    "lint": "eslint src/",
+    "lint:fix": "eslint src/ --fix"
+  },
+  "dependencies": {
+    "@azure/data-tables": "^13.3.0",
+    "@azure/identity": "^4.6.0",
+    "@microsoft/microsoft-graph-client": "^3.0.7",
+    "applicationinsights": "^3.4.0",
+    "jose": "^6.0.11"
+  },
+  "devDependencies": {
+    "eslint": "^9.17.0"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "",
+    "FUNCTIONS_WORKER_RUNTIME": "node",
+    "AZURE_FUNCTIONS_ENVIRONMENT": "Development",
+    "ENTRA_TENANT_ID": "<your-tenant-id>",
+    "ENTRA_CLIENT_ID": "<helpdesk-backend-app-reg-client-id>",
+    "TAP_LIFETIME_MINUTES": "120",
+    "TAP_IS_USABLE_ONCE": "true",
+    "TAP_DISPLAY_TIMEOUT_SECONDS": "120",
+    "AUDIT_TABLE_NAME": "TapAuditHelpdesk",
+    "BLOCKED_GROUP_IDS": "",
+    "NOTIFICATION_SENDER": ""
+  }
+}
