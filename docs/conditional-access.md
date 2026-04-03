@@ -43,37 +43,6 @@ Ensures that end users accessing the Self-Service TAP portal are using MFA and a
 7. **Enable policy**: On
 8. Click **Create**
 
-### CLI (Preview)
-
-```bash
-az rest --method POST \
-  --uri "https://graph.microsoft.com/v1.0/identity/conditionalAccess/policies" \
-  --headers "Content-Type=application/json" \
-  --body '{
-    "displayName": "EphemGate – Self-Service Portal Access",
-    "state": "enabled",
-    "conditions": {
-      "users": {
-        "includeUsers": ["All"]
-      },
-      "applications": {
-        "includeApplications": ["<self-service-app-id>"]
-      }
-    },
-    "grantControls": {
-      "operator": "AND",
-      "builtInControls": ["mfa", "compliantDevice"]
-    },
-    "sessionControls": {
-      "signInFrequency": {
-        "value": 1,
-        "type": "hours",
-        "isEnabled": true
-      }
-    }
-  }'
-```
-
 ---
 
 ## Policy 2: Helpdesk Portal
