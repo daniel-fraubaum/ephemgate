@@ -2,6 +2,12 @@
 
 A **Self-Service & Helpdesk Portal** for Microsoft Entra ID Temporary Access Passes (TAP). Securely issue time-limited TAPs through a modern web interface — either by end users themselves or by helpdesk agents on their behalf.
 
+## 📸 Screenshots
+
+| Self-Service Portal | Helpdesk Portal |
+|---|---|
+| ![Self-Service Portal](SelfService.png) | ![Helpdesk Portal](HelpDesk.png) |
+
 ## ✨ Features
 
 - 🔑 **Self-Service Portal** – End users create their own TAP (delegated permissions, OBO flow)
